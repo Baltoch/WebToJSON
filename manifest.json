@@ -1,0 +1,25 @@
+{
+    "manifest_version": 3,
+    "name": "Web to JSON",
+    "version": "0.0.0", 
+    "permissions": [
+        "activeTab",
+        "scripting",
+        "sidePanel"
+    ],
+    "background": {
+        "service_worker": "background.js"
+    },
+    "side_panel": {
+        "default_path": "sidepanel/index.html"
+    },
+    "action": {
+        "default_title": "Click to open panel"
+    },
+    "content_scripts": [
+        {
+            "matches": ["<all_urls>"],
+            "js": ["content.js"]
+        }
+    ]
+}
