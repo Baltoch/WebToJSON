@@ -1,0 +1,134 @@
+<prompts>
+    <system>
+        You are a helpful assistant that translates web pages into JSON objects.
+        The properties of the JSON object depend on what the user wants.
+        You run in a loop of Thought, Action, PAUSE, Observation.
+        At the end of the loop you output an Answer to the user's request telling how you changed the JSON object.
+        Use Thought to describe your thoughts about the question you have been asked.
+        Use Action to run one of the actions available to you - then return PAUSE.
+        Observation will be the result of running those actions.
+    </system>
+</prompts>
+<actions>
+    <action>
+        <title>summarize</title>
+        <description>Summarize the given text</description>
+        <parameters>
+            <parameter>
+                <name>text</name>
+                <description>The text to summarize</description>
+                <type>string</type>
+            </parameter>
+            <parameter>
+                <name>context</name>
+                <description>Additional context to provide to the summarizer</description>
+                <type>string</type>
+            </parameter>
+        </parameters>
+    </action>
+    <action>
+        <title>search</title>
+    </action>
+    <action>
+        <title>translate</title>
+        <description>Use Chrome Built-in AI translator to translate a text</description>
+        <parameters>
+            <parameter>
+                <name>text</name>
+                <description>The text to translate</description>
+                <type>string</type>
+            </parameter>
+            <parameter>
+                <name>language</name>
+                <description>Language to translate to</description>
+                <type>string</type>
+            </parameter>
+        </parameters>
+    </action>
+    <action>
+        <title>addJSONProperty</title>
+        <description>Allows you to add a property to the JSON object accessible to the user</description>
+        <parameters>
+            <parameter>
+                <name>property</name>
+                <description>The property to add</description>
+                <type>string | number</type>
+            </parameter>
+            <parameter>
+                <name>value</name>
+                <description>The value of the property</description>
+                <type>any</type>
+            </parameter>
+        </parameters>
+    </action>
+    <action>
+        <title>editJSONProperty</title>
+        <description>Allows you to edit a property of the JSON object accessible to the user</description>
+        <parameters>
+            <parameter>
+                <name>property</name>
+                <description>The property to edit</description>
+                <type>string | number</type>
+            </parameter>
+            <parameter>
+                <name>value</name>
+                <description>The new value of the property</description>
+                <type>any</type>
+            </parameter>
+        </parameters>
+    </action>
+    <action>
+        <title>removeJSONProperty</title>
+        <description>Allows you to remove a property from the JSON object accessible to the user</description>
+        <parameters>
+            <parameter>
+                <name>property</name>
+                <description>The property to remove</description>
+                <type>string | number</type>
+            </parameter>
+        </parameters>
+    </action>
+    <action>
+        <title>addMemoryProperty</title>
+        <description>Allows you to add a property to the Memory object accessible to the user</description>
+        <parameters>
+            <parameter>
+                <name>property</name>
+                <description>The property to add</description>
+                <type>string | number</type>
+            </parameter>
+            <parameter>
+                <name>value</name>
+                <description>The value of the property</description>
+                <type>any</type>
+            </parameter>
+        </parameters>
+    </action>
+    <action>
+        <title>editMemoryProperty</title>
+        <description>Allows you to edit a property of the Memory object accessible to the user</description>
+        <parameters>
+            <parameter>
+                <name>property</name>
+                <description>The property to edit</description>
+                <type>string | number</type>
+            </parameter>
+            <parameter>
+                <name>value</name>
+                <description>The new value of the property</description>
+                <type>any</type>
+            </parameter>
+        </parameters>
+    </action>
+    <action>
+        <title>removeMemoryProperty</title>
+        <description>Allows you to remove a property from the Memory object</description>
+        <parameters>
+            <parameter>
+                <name>property</name>
+                <description>The property to remove</description>
+                <type>string | number</type>
+            </parameter>
+        </parameters>
+    </action>
+</actions>

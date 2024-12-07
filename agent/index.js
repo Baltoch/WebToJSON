@@ -1,6 +1,8 @@
 import { ChatOpenAI } from "@langchain/openai";
-import { AIMessage, HumanMessage, SystemMessage } from "@langchain/schema";
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
+
+const prompt = await fs.readFile('./prompt.xml', 'utf8');
+const example = await fs.readFile('./example.xml', 'utf8');
 
 const gemini = new ChatGoogleGenerativeAI({
     model: "gemini-1.5-flash",
@@ -10,41 +12,72 @@ const gemini = new ChatGoogleGenerativeAI({
     // other params...
 });
 
-class BuiltInAI {
+const llm = new BuiltInAI();
+
+const gpt = new ChatOpenAI({
+    model: "gpt-4o-mini",
+    temperature: 0
+});
+
+/**
+ * Represents a message in the conversation with the AI agent
+ */
+class Message {
+    #type = "message";
+
+    constructor(message) {
+        this.message = message;
+    }
+
+    /**
+     * Returns the prompt for the message in the format of a XML tag
+     * @returns {string} The prompt for the message
+     */
+    getPrompt() {
+        return `<${this.#type}>\n\t${this.message}\n</${this.#type}>`;
+    }
+
+    /**
+     * Returns the content of the message
+     * @returns {string} The content of the message
+     */
+    toString() {
+        return this.message;
+    }
+}
+
+/**
+ * Represents a message from the AI agent to the user
+ */
+class AIMessage extends Message {
+    #type = "assistant";
+}
+
+/**
+ * Represents a message from the user to the AI agent
+ */
+class HumanMessage extends Message {
+    #type = "user";
+}
+
+/**
+ * Represents a message from the system to the AI agent
+ */
+class SystemMessage extends Message {
+    #type = "system";
+}
+
+/**
+ * Represents the webpage to be analyzed by the AI agent
+ */
+class WebpageMessage extends Message {
+    #type = "webpage";
+}
+
+class BuiltInAI extends ChatOpenAI {
     constructor() {
         this.session = chrome.aiOriginTrial.languageModel.create({
-            systemPrompt: `You are a helpful assistant that translates web pages into JSON objects.
-            The properties of the JSON object depend on what the user wants.
-            You run in a loop of Thought, Action, PAUSE, Observation.
-            At the end of the loop you output an Answer
-            Use Thought to describe your thoughts about the question you have been asked.
-            Use Action to run one of the actions available to you - then return PAUSE.
-            Observation will be the result of running those actions.
-        
-            Your available actions are:
-        
-            calculate:
-            e.g. calculate: 4 * 7 / 3
-            Runs a calculation and returns the number - uses Python so be sure to use floating point syntax if necessary
-        
-            average_dog_weight:
-            e.g. average_dog_weight: Collie
-            returns average weight of a dog when given the breed
-        
-            Example session:
-        
-            Question: How much does a Bulldog weigh?
-            Thought: I should look the dogs weight using average_dog_weight
-            Action: average_dog_weight: Bulldog
-            PAUSE
-        
-            You will be called again with this:
-        
-            Observation: A Bulldog weights 51 lbs
-        
-            You then output:
-        
-            Answer: A bulldog weights 51 lbs`
+            systemPrompt: prompt
         });
     }
 
@@ -54,75 +87,41 @@ class BuiltInAI {
     }
 }
 
-const llm = new BuiltInAI();
-
-const gpt = new ChatOpenAI({
-    model: "gpt-4o-mini",
-    temperature: 0
-});
-
 class WebAgent {
-    constructor() {
-        this.system = `You are a helpful assistant that translates web pages into JSON objects.
-    The properties of the JSON object depend on what the user wants.
-    You run in a loop of Thought, Action, PAUSE, Observation.
-    At the end of the loop you output an Answer
-    Use Thought to describe your thoughts about the question you have been asked.
-    Use Action to run one of the actions available to you - then return PAUSE.
-    Observation will be the result of running those actions.
-
-    Your available actions are:
-
-    calculate:
-    e.g. calculate: 4 * 7 / 3
-    Runs a calculation and returns the number - uses Python so be sure to use floating point syntax if necessary
-
-    average_dog_weight:
-    e.g. average_dog_weight: Collie
-    returns average weight of a dog when given the breed
-
-    Example session:
-
-    Question: How much does a Bulldog weigh?
-    Thought: I should look the dogs weight using average_dog_weight
-    Action: average_dog_weight: Bulldog
-    PAUSE
-
-    You will be called again with this:
-
-    Observation: A Bulldog weights 51 lbs
-
-    You then output:
-
-    Answer: A bulldog weights 51 lbs`;
-        this.messages = []; // Message history
+    /**
+     * Creates a new WebAgent instance
+     * @param {string} system The system prompt for the agent
+     * @param {ChatOpenAI | BuiltInAI} model The model to use for the agent
+     */
+    constructor(system, model) {
+        this.system = system;
+        this.session = []; // Message history
 
         if (this.system) {
-            this.messages.push(new SystemMessage(this.system));
+            this.session.push(new SystemMessage(this.system));
         }
 
         // Initialize the chat model
-        this.chatModel = gpt;
+        this.chatModel = model;
     }
 
     async call(message) {
         // Add user message to history
-        this.messages.push(new HumanMessage(message));
+        this.session.push(new HumanMessage(message));
 
         // Execute the model and get the result
         const result = await this.execute();
 
         // Add assistant's response to history
-        this.messages.push(new AIMessage(result));
+        this.session.push(new AIMessage(result));
 
         return result;
     }
 
     async execute() {
         // Execute the model with the current message history
-        const response = await this.chatModel.invoke(this.messages);
-
-        return response.content;
+        const response = await this.chatModel.invoke(this.session);
+        return response;
     }
 }
 
