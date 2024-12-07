@@ -87,6 +87,11 @@ class BuiltInAI extends ChatOpenAI {
     }
 }
 
+/**
+ * AI agent that can interact with the user and the webpage
+ * @param {string} system The system prompt for the agent
+ * @param {ChatOpenAI | BuiltInAI} model The model to use for the agent
+ */
 class WebAgent {
     /**
      * Creates a new WebAgent instance
@@ -94,12 +99,10 @@ class WebAgent {
      * @param {ChatOpenAI | BuiltInAI} model The model to use for the agent
      */
     constructor(system, model) {
+        this.json = {};
+        this.memory = {};
         this.system = system;
         this.session = []; // Message history
-
-        if (this.system) {
-            this.session.push(new SystemMessage(this.system));
-        }
 
         // Initialize the chat model
         this.chatModel = model;
@@ -110,7 +113,7 @@ class WebAgent {
         this.session.push(new HumanMessage(message));
 
         // Execute the model and get the result
-        const result = await this.execute();
+        const result = await this.#execute();
 
         // Add assistant's response to history
         this.session.push(new AIMessage(result));
@@ -118,11 +121,81 @@ class WebAgent {
         return result;
     }
 
-    async execute() {
+    async #execute() {
         // Execute the model with the current message history
-        const response = await this.chatModel.invoke(this.session);
+        const response = await this.chatModel.invoke(this.#prompt());
+        while (response.match("*ACTION*")) {
+            this.session.push(new AIMessage(response));
+            if (response.match("*addJSONProperty*")) {
+                params = getParams(response)
+                this.json = addJSONProperty(this.json, params["property"], params["value"]);
+                this.session.push(new SystemMessage(`JSON object state changed to :\n${JSON.stringify(this.json)}`));
+            }
+            else if (response.match("*editJSONProperty*")) {
+                params = getParams(response)
+                this.json = editJSONProperty(this.json, params["property"], params["value"]);
+                this.session.push(new SystemMessage(`JSON object state changed to :\n${JSON.stringify(this.json)}`));
+            }
+            else if (response.match("*removeJSONProperty*")) {
+                params = getParams(response)
+                this.json = removeJSONProperty(this.json, params["property"]);
+                this.session.push(new SystemMessage(`JSON object state changed to :\n${JSON.stringify(this.json)}`));
+            }
+            else if (response.match("*addMemoryProperty*")) {
+                params = getParams(response)
+                this.memory = addJSONProperty(this.memory, params["property"], params["value"]);
+                this.session.push(new SystemMessage(`Memory object state changed to :\n${JSON.stringify(this.memory)}`));
+            }
+            else if (response.match("*editMemoryProperty*")) {
+                params = getParams(response)
+                this.memory = editJSONProperty(this.memory, params["property"], params["value"]);
+                this.session.push(new SystemMessage(`Memory object state changed to :\n${JSON.stringify(this.memory)}`));
+            }
+            else if (response.match("*removeMemoryProperty*")) {
+                params = getParams(response)
+                this.memory = removeJSONProperty(this.memory, params["property"]);
+                this.session.push(new SystemMessage(`Memory object state changed to :\n${JSON.stringify(this.memory)}`));
+            }
+            else if (response.match("*summarize*")) {
+                params = getParams(response)
+                this.session.push(new SystemMessage(await summarize(params["text"], params["context"])));
+            }
+            else if (response.match("*translate*")) {
+                params = getParams(response)
+                this.session.push(new SystemMessage(await translate(params["text"], params["language"])));
+            }
+            else {
+                this.session.push(new SystemMessage("Invalid action"));
+            }
+            response = await this.chatModel.invoke(this.#prompt());
+        }
         return response;
     }
+
+    /**
+     * Returns the prompt for the current session state
+     * @returns {string} The prompt for the current session state
+     */
+    #prompt() {
+        let prompt = this.system;
+        prompt += "\n";
+        this.session.forEach(message => {
+            prompt += message.getPrompt();
+            prompt += "\n";
+        });
+        return prompt;
+    }
+}
+
+/** 
+ * Extracts the parameters from an action request from the agent
+ * @param {string} response The response to extract parameters from
+ * @returns {Object} The extracted parameters
+ */
+function getParams(response) {
+    start = response.indexOf("{");
+    end = response.lastIndexOf("}");
+    return JSON.parse(response.substring(start, end + 1));
 }
 
 /**
