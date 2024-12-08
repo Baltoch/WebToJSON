@@ -1,4 +1,4 @@
-function Header() {
+export default function Header() {
 
     const header = {
         width: '100%',
@@ -17,5 +17,3 @@ function Header() {
         </header>
     );
 }
-
-export default Header
