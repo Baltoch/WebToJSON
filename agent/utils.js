@@ -30,28 +30,28 @@ class Message {
 /**
  * Represents a message from the AI agent to the user
  */
-export class AIMessage extends Message {
+class AIMessage extends Message {
     #type = "assistant";
 }
 
 /**
  * Represents a message from the user to the AI agent
  */
-export class HumanMessage extends Message {
+class HumanMessage extends Message {
     #type = "user";
 }
 
 /**
  * Represents a message from the system to the AI agent
  */
-export class SystemMessage extends Message {
+class SystemMessage extends Message {
     #type = "system";
 }
 
 /**
  * Represents the webpage to be analyzed by the AI agent
  */
-export class WebpageMessage extends Message {
+class WebpageMessage extends Message {
     #type = "webpage";
 }
 
@@ -79,11 +79,12 @@ export class WebAgent {
      * @param {string} system The system prompt for the agent
      * @param {ChatOpenAI | BuiltInAI} model The model to use for the agent
      */
-    constructor(system, model) {
+    constructor(system, example, model, webpage) {
         this.json = {};
         this.memory = {};
         this.system = system;
-        this.session = []; // Message history
+        this.example = example;
+        this.session = [new WebpageMessage(webpage)]; // Message history
 
         // Initialize the chat model
         this.chatModel = model;
@@ -102,6 +103,15 @@ export class WebAgent {
         return result;
     }
 
+    /**
+     * Sets the JSON object
+     * @param {Object} json The JSON object to set
+     */
+    #setJSON(json) {
+        this.json = json;
+        sendMessage(this.json, "JSON")
+    }
+
     async #execute() {
         // Execute the model with the current message history
         const response = await this.chatModel.invoke(this.#prompt());
@@ -109,17 +119,17 @@ export class WebAgent {
             this.session.push(new AIMessage(response));
             if (response.match("*addJSONProperty*")) {
                 params = getParams(response)
-                this.json = addJSONProperty(this.json, params["property"], params["value"]);
+                this.#setJSON(addJSONProperty(this.json, params["property"], params["value"]));
                 this.session.push(new SystemMessage(`JSON object state changed to :\n${JSON.stringify(this.json)}`));
             }
             else if (response.match("*editJSONProperty*")) {
                 params = getParams(response)
-                this.json = editJSONProperty(this.json, params["property"], params["value"]);
+                this.#setJSON(editJSONProperty(this.json, params["property"], params["value"]));
                 this.session.push(new SystemMessage(`JSON object state changed to :\n${JSON.stringify(this.json)}`));
             }
             else if (response.match("*removeJSONProperty*")) {
                 params = getParams(response)
-                this.json = removeJSONProperty(this.json, params["property"]);
+                this.#setJSON(removeJSONProperty(this.json, params["property"]));
                 this.session.push(new SystemMessage(`JSON object state changed to :\n${JSON.stringify(this.json)}`));
             }
             else if (response.match("*addMemoryProperty*")) {
@@ -139,16 +149,17 @@ export class WebAgent {
             }
             else if (response.match("*summarize*")) {
                 params = getParams(response)
-                this.session.push(new SystemMessage(await summarize(params["text"], params["context"])));
+                this.session.push(new SystemMessage(`Summarized text:\n${await summarize(params["text"], params["context"])}`));
             }
             else if (response.match("*translate*")) {
                 params = getParams(response)
-                this.session.push(new SystemMessage(await translate(params["text"], params["language"])));
+                this.session.push(new SystemMessage(`Translated text:\n${await translate(params["text"], params["language"])}`));
             }
             else {
                 this.session.push(new SystemMessage("Invalid action"));
             }
             response = await this.chatModel.invoke(this.#prompt());
+            this.session.push(new AIMessage(response));
         }
         return response;
     }
@@ -158,12 +169,17 @@ export class WebAgent {
      * @returns {string} The prompt for the current session state
      */
     #prompt() {
-        let prompt = this.system;
-        prompt += "\n";
+        let prompt = ""
         this.session.forEach(message => {
             prompt += message.getPrompt();
             prompt += "\n";
         });
+        if (prompt.length < 30000) {
+            prompt = `${this.system}\n${this.example}\n${prompt}`;
+        }
+        else {
+            prompt = `${this.system}\n${prompt}`;
+        }
         return prompt;
     }
 }
@@ -171,9 +187,10 @@ export class WebAgent {
 /**
  * Sends a message to the chrome extension
  * @param {string} message the message to send
+ * @param {string} type Optional param to set the type of message (defaults to AgentMessage)
  */
-function sendMessage(message) {
-    chrome.runtime.sendMessage({ type: "AgentMessage", content: message });
+export function sendMessage(message, type = "AgentMessage") {
+    chrome.runtime.sendMessage({ type: type, content: message });
 }
 
 /** 

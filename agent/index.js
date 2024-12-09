@@ -1,35 +1,44 @@
 import { ChatOpenAI } from "@langchain/openai";
-import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
-import { WebAgent, AIMessage, HumanMessage, SystemMessage, WebpageMessage, BuiltInAI } from './utils.js';
+import { WebAgent, BuiltInAI, sendMessage } from './utils.js';
 
 const prompt = await fs.readFile('./prompt.xml', 'utf8');
 const example = await fs.readFile('./example.xml', 'utf8');
+let agent;
+let model;
 
-const gemini = new ChatGoogleGenerativeAI({
-    model: "gemini-1.5-flash",
-    temperature: 0,
-    maxRetries: 2,
-    // apiKey: "...",
-    // other params...
-});
-
-const llm = new BuiltInAI();
-
-const gpt = new ChatOpenAI({
-    model: "gpt-4o-mini",
-    temperature: 0
-});
+if (!('aiOriginTrial' in chrome)) {
+    console.error('Error: chrome.aiOriginTrial not supported in this browser');
+    model = new ChatOpenAI({
+        model: "gpt-4o-mini",
+        temperature: 0
+    });
+    return;
+}
+else {
+    model = new BuiltInAI();
+}
 
 /**
  * Listens for messages from the chrome extension
  */
 chrome.runtime.onMessage.addListener(
-    function (request, sender, sendResponse) {
-        if (request.type === "WebPageContent") {
-            webpage = request.content;
-        }
+    async function (request, sender, sendResponse) {
         if (request.type === "UserMessage") {
-
+            if (agent != null) {
+                if (request.content.length > 0) {
+                    let resp = await agent.call(request.content);
+                    sendMessage(resp);
+                }
+            }
+            else {
+                sendMessage("Agent not ready", "Error");
+            }
+        }
+        else if (request.type === "WebPageContent") {
+            if (request.content.length > 0) {
+                agent = new WebAgent(prompt, example, model, request.content);
+                sendMessage("Agent ready");
+            }
         }
     }
 );
