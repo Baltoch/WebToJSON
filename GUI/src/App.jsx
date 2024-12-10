@@ -1,12 +1,14 @@
-// import Header from "./components/Header";
-import PromptArea from "./components/PromptArea"
+import Page from './components/Page';
+
+
 
 function App() {
 
+
+
     return (
         <>
-            {/* <Header/> */}
-            <PromptArea/>
+            <Page/>
         </>
     );
 }
