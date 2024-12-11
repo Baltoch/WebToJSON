@@ -1,5 +1,4 @@
-/* eslint-disable react/prop-types */
-
+import PropTypes from 'prop-types';
 
 export default function BubbleSection({list}) {
     
@@ -13,4 +12,7 @@ export default function BubbleSection({list}) {
             {bubbles}
         </section>
     )
+}
+BubbleSection.propTypes = {
+    list: PropTypes.array.isRequired
 }
