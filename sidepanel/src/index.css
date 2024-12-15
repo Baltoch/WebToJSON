@@ -9,11 +9,10 @@
   --bg: light-dark(#F4F8FA, #293442);
   --bg-secondary: light-dark(#E1EFF8, #3E526A);
   --bg-tertiary: light-dark(#EAEDEF, #4C535D);
-  --bg-text-area: light-dark(#E5EEF4, #3E526A)
-  --placeholder-color: light-dark(#000000,  #ffffff);
+  --bg-text-area: light-dark(#E5EEF4, #3E526A) --placeholder-color: light-dark(#000000, #ffffff);
 }
 
-body{
+body {
   background-color: var(--bg);
   width: 100dvw;
   height: 100dvh;
@@ -25,13 +24,13 @@ body{
   margin: 0;
 }
 
-.prompt-area{
+.prompt-area {
   display: flex;
   flex-direction: row;
   gap: 10px;
 }
 
-.prompt-section{
+.prompt-section {
   height: calc(100dvh - 2rem);
   display: flex;
   flex-direction: column;
@@ -39,14 +38,14 @@ body{
   align-items: center;
 }
 
-.prompt-section-down{
+.prompt-section-down {
   height: 3rem;
   display: flex;
   flex-direction: row;
   gap: 10px;
 }
 
-footer{
+footer {
   width: 100dvw;
   height: 2rem;
   display: flex;
@@ -55,7 +54,7 @@ footer{
   padding: .5rem;
 }
 
-article{
+article {
   max-width: 80%;
   padding: .5rem;
   margin-top: .5rem;
@@ -65,27 +64,27 @@ article{
   border-radius: 0.75rem;
 }
 
-.bubble-user{
+.bubble-user {
   align-self: end;
   background-color: var(--bg-secondary);
 }
 
-.bubble-ai{
+.bubble-assistant {
   align-self: start;
   background-color: var(--bg-tertiary);
 }
 
-.bubble-section{
+.bubble-section {
   width: 100dvw;
   height: 50%;
   display: flex;
-  flex-direction: column-reverse;
+  flex-direction: column;
   overflow-y: scroll;
   padding: 0.5rem;
   box-sizing: border-box;
 }
 
-.json-area{
+.json-area {
   width: 100dvw;
   height: 50%;
   background-color: var(--bg-secondary);
@@ -94,7 +93,7 @@ article{
   box-sizing: border-box;
 }
 
-.main-area{
+.main-area {
   width: 100dvw;
   height: 80%;
   display: flex;
@@ -102,7 +101,7 @@ article{
   margin-top: 2em;
 }
 
-textarea{
+textarea {
   background-color: var(--bg-text-area);
   width: 50dvw;
   min-height: 2.5rem;
@@ -111,13 +110,13 @@ textarea{
   padding: 0.5rem;
 }
 
-textarea::placeholder{
+textarea::placeholder {
   color: var(--placeholder-color);
   font-family: "ABeeZee", sans-serif;
   font-style: italic;
 }
 
-.submit-button{
+.submit-button {
   border-radius: .5rem;
   min-height: 2.5rem;
   width: auto;

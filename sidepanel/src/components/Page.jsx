@@ -1,38 +1,34 @@
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {SendHorizontal} from 'lucide-react';
 import BubbleSection from './BubbleSection';
 import JSONSection from './JSONSection';
-import { json } from '../asset/JSONDataTest';
-
-
-let nextId = 0;
+// import { json } from '../asset/JSONDataTest';
+import BuiltInAIAgent from '../agent/index.js';
 
 export default function Page() {
-
-    const [bubbles, setBubbles] = useState([]);
-    const [showHomePage, setshowHomePage] = useState(false);
     const labelRef = useRef(null);
     const promptSectionRef = useRef(null);
+    const [showHomePage, setshowHomePage] = useState(false);
+    const [json, setJSON] = useState({});
+    const [session, setSession] = useState([]); 
+    const agent = useRef(new BuiltInAIAgent(json, setJSON, session, setSession));
 
-    const addBubble = (e) => {
+    useEffect(() => {
+        async function initAgent() {
+            console.log("Initializing agent");
+            console.log(await agent.current.init());
+            console.log("Agent initialized");
+        }
+        initAgent();
+    }, []);
+
+    async function addBubble(e) { 
         e.preventDefault();
         const data = new FormData(e.target)
-        if(e.nativeEvent.submitter.innerText === "AI") {
-            setBubbles([
-                {id: nextId++, content: data.get("prompt"), user: false},
-                ...bubbles
-            ])
-        }
-        else {
-            setBubbles([
-                {id: nextId++, content: data.get("prompt"), user: true},
-                ...bubbles
-            ])
-        }
-
-        console.log(bubbles);
-
+        console.log(agent.current.status);
+        console.log(session);
+        await agent.current.call(data.get("prompt"));
         labelRef.current.remove();
         promptSectionRef.current.className = 'prompt-section-down';
         setshowHomePage(true);
@@ -44,7 +40,7 @@ export default function Page() {
             {showHomePage && (
                 <>
                     <JSONSection object={json}/>
-                    <BubbleSection list={bubbles}/>
+                    <BubbleSection list={session}/>
                 </>)
             }
             <section className='prompt-section' ref={promptSectionRef}>
@@ -57,7 +53,6 @@ export default function Page() {
                     <button type='submit' className='submit-button'>
                         <SendHorizontal strokeWidth={2} />
                     </button>
-                    {showHomePage && <button type='submit'>AI</button>}
                 </form>
             </section>
             <footer>Developped with ♥ by Balthazar and Paul</footer>

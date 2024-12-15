@@ -2,10 +2,13 @@ import PropTypes from 'prop-types';
 
 export default function BubbleSection({list}) {
     
-    const bubbles = list.map(bubble => 
-        <article key={bubble.id} className={bubble.user ? 'bubble-user' : 'bubble-ai'}>
-            {bubble.content}
-        </article>)
+    const bubbles = list.map((bubble, index) => {
+        if(bubble.getType() === "user" || bubble.getType() === "assistant") {
+            return (<article key={index} className={`bubble-${bubble.getType()}`}>
+                {bubble.toString()}
+            </article>)
+        }
+    })
 
     return( 
         <section className="bubble-section">

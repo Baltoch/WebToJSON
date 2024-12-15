@@ -1,10 +1,13 @@
-import { ChatOpenAI } from "@langchain/openai";
+import builtInAICreateSession from "../utils/builtInAICreateSession";
+import builtInAISummarize from '../utils/builtInAISummarize.js';
+import builtInAITranslate from '../utils/builtInAITranslate.js';
+import sendChromeMessage from '../utils/sendChromeMessage.js';
 
 /**
  * Represents a message in the conversation with the AI agent
  */
 class Message {
-    #type = "message";
+    type = "message";
 
     constructor(message) {
         this.message = message;
@@ -15,7 +18,15 @@ class Message {
      * @returns {string} The prompt for the message
      */
     getPrompt() {
-        return `<${this.#type}>\n\t${this.message}\n</${this.#type}>`;
+        return `<${this.type}>\n\t${this.message}\n</${this.type}>`;
+    }
+
+    /** 
+     * Returns the type of the message
+     * @returns {string} The type of the message
+     */
+    getType() {
+        return this.type;
     }
 
     /**
@@ -30,39 +41,44 @@ class Message {
 /**
  * Represents a message from the AI agent to the user
  */
-class AIMessage extends Message {
-    #type = "assistant";
+export class AIMessage extends Message {
+    type = "assistant";
 }
 
 /**
  * Represents a message from the user to the AI agent
  */
-class HumanMessage extends Message {
-    #type = "user";
+export class HumanMessage extends Message {
+    type = "user";
 }
 
 /**
  * Represents a message from the system to the AI agent
  */
-class SystemMessage extends Message {
-    #type = "system";
+export class SystemMessage extends Message {
+    type = "system";
 }
 
 /**
  * Represents the webpage to be analyzed by the AI agent
  */
-class WebpageMessage extends Message {
-    #type = "webpage";
+export class WebpageMessage extends Message {
+    type = "webpage";
 }
 
-export class BuiltInAI extends ChatOpenAI {
+export class BuiltInAI {
     constructor() {
-        this.session = chrome.aiOriginTrial.languageModel.create({
-            systemPrompt: prompt
-        });
+        this.session = null;
+    }
+
+    async init() {
+        this.session = await builtInAICreateSession({});
     }
 
     async invoke(text) {
+        if (this.session == null) {
+            throw new Error("Session not initialized please call init() first");
+        }
         const response = await this.session.prompt(text);
         return response;
     }
@@ -77,7 +93,9 @@ export class WebAgent {
     /**
      * Creates a new WebAgent instance
      * @param {string} system The system prompt for the agent
+     * @param {string} example The example prompt session for the agent
      * @param {ChatOpenAI | BuiltInAI} model The model to use for the agent
+     * @param {Object} webpage The webpage to analyze
      */
     constructor(system, example, model, webpage) {
         this.json = {};
@@ -109,7 +127,7 @@ export class WebAgent {
      */
     #setJSON(json) {
         this.json = json;
-        sendMessage(this.json, "JSON")
+        sendChromeMessage(this.json, "JSON")
     }
 
     async #execute() {
@@ -118,47 +136,47 @@ export class WebAgent {
         while (response.match("*ACTION*")) {
             this.session.push(new AIMessage(response));
             if (response.match("*addJSONProperty*")) {
-                params = getParams(response)
+                let params = getParams(response)
                 this.#setJSON(addJSONProperty(this.json, params["property"], params["value"]));
                 this.session.push(new SystemMessage(`JSON object state changed to :\n${JSON.stringify(this.json)}`));
             }
             else if (response.match("*editJSONProperty*")) {
-                params = getParams(response)
+                let params = getParams(response)
                 this.#setJSON(editJSONProperty(this.json, params["property"], params["value"]));
                 this.session.push(new SystemMessage(`JSON object state changed to :\n${JSON.stringify(this.json)}`));
             }
             else if (response.match("*removeJSONProperty*")) {
-                params = getParams(response)
+                let params = getParams(response)
                 this.#setJSON(removeJSONProperty(this.json, params["property"]));
                 this.session.push(new SystemMessage(`JSON object state changed to :\n${JSON.stringify(this.json)}`));
             }
             else if (response.match("*addMemoryProperty*")) {
-                params = getParams(response)
+                let params = getParams(response)
                 this.memory = addJSONProperty(this.memory, params["property"], params["value"]);
                 this.session.push(new SystemMessage(`Memory object state changed to :\n${JSON.stringify(this.memory)}`));
             }
             else if (response.match("*editMemoryProperty*")) {
-                params = getParams(response)
+                let params = getParams(response)
                 this.memory = editJSONProperty(this.memory, params["property"], params["value"]);
                 this.session.push(new SystemMessage(`Memory object state changed to :\n${JSON.stringify(this.memory)}`));
             }
             else if (response.match("*removeMemoryProperty*")) {
-                params = getParams(response)
+                let params = getParams(response)
                 this.memory = removeJSONProperty(this.memory, params["property"]);
                 this.session.push(new SystemMessage(`Memory object state changed to :\n${JSON.stringify(this.memory)}`));
             }
             else if (response.match("*summarize*")) {
-                params = getParams(response)
-                this.session.push(new SystemMessage(`Summarized text:\n${await summarize(params["text"], params["context"])}`));
+                let params = getParams(response)
+                this.session.push(new SystemMessage(`Summarized text:\n${await builtInAISummarize(params["text"], params["context"])}`));
             }
             else if (response.match("*translate*")) {
-                params = getParams(response)
-                this.session.push(new SystemMessage(`Translated text:\n${await translate(params["text"], params["language"])}`));
+                let params = getParams(response)
+                this.session.push(new SystemMessage(`Translated text:\n${await builtInAITranslate(params["text"], params["language"])}`));
             }
             else {
                 this.session.push(new SystemMessage("Invalid action"));
             }
-            response = await this.chatModel.invoke(this.#prompt());
+            let response = await this.chatModel.invoke(this.#prompt());
             this.session.push(new AIMessage(response));
         }
         return response;
@@ -184,23 +202,15 @@ export class WebAgent {
     }
 }
 
-/**
- * Sends a message to the chrome extension
- * @param {string} message the message to send
- * @param {string} type Optional param to set the type of message (defaults to AgentMessage)
- */
-export function sendMessage(message, type = "AgentMessage") {
-    chrome.runtime.sendMessage({ type: type, content: message });
-}
-
 /** 
  * Extracts the parameters from an action request from the agent
  * @param {string} response The response to extract parameters from
  * @returns {Object} The extracted parameters
  */
-function getParams(response) {
-    start = response.indexOf("{");
-    end = response.lastIndexOf("}");
+export function getParams(response) {
+    const start = response.indexOf("{");
+    const end = response.lastIndexOf("}");
+    console.log(response.substring(start, end + 1));
     return JSON.parse(response.substring(start, end + 1));
 }
 
@@ -211,7 +221,8 @@ function getParams(response) {
  * @param {*} value
  * @returns {Object} json
  */
-function addJSONProperty(json, property, value) {
+export function addJSONProperty(json, property, value) {
+    console.log(value);
     if (json[property]) {
         json[property].push(value);
     } else {
@@ -227,7 +238,7 @@ function addJSONProperty(json, property, value) {
  * @param {*} value
  * @returns {Object} json
  */
-function editJSONProperty(json, property, value) {
+export function editJSONProperty(json, property, value) {
     json[property] = [value];
     return json;
 }
@@ -238,48 +249,7 @@ function editJSONProperty(json, property, value) {
  * @param {string | number} property
  * @returns {Object} json 
  */
-function removeJSONProperty(json, property) {
+export function removeJSONProperty(json, property) {
     json.drop(property);
     return json;
-}
-
-/**
- * Use the Chrome Built-in AI summarizer to summarize a text
- * @param {string} text Text to summarize
- * @param {string | null} context Additional context to provide to the summarizer
- * @returns {string} summary
- */
-async function summarize(text, context) {
-    // Built-in AI summarizer
-    const summarizer = await self.ai.summarizer.create({
-        monitor(m) {
-            m.addEventListener('downloadprogress', (e) => {
-                console.log(`Downloaded ${e.loaded} of ${e.total} bytes.`);
-            });
-        }
-    });
-    const summary = await summarizer.summarize(text, {
-        context: context,
-    });
-    return summary;
-}
-
-/**
- * Use Chrome Built-in AI translator to translate a text
- * @param {string} text text to translate
- * @param {string} language language to translate to
- * @returns {string} translation
- */
-async function translate(text, language) {
-    // Detecting the source language
-    detector = await self.translation.createDetector();
-    const sourceLanguage = await detector.detect(someUserText);
-
-    // Translating the text
-    const translator = await self.translation.createTranslator({
-        sourceLanguage: sourceLanguage,
-        targetLanguage: language,
-    });
-    const translation = await translator.translate(text);
-    return translation;
 }
