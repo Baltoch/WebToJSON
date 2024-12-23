@@ -1,0 +1,35 @@
+{
+  "name": "gui",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --config ./sidepanel/vite.config.js",
+    "build": "vite build",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "dev:sidepanel": "vite --config ./sidepanel/vite.config.js ./sidepanel",
+    "prebuild:sidepanel": "shx cp -R ./sidepanel/src/utils ./sidepanel/src/dev-utils && shx cp -R ./utils ./sidepanel/src",
+    "build:sidepanel": "vite build --config ./sidepanel/vite.config.js --outDir ../dist/sidepanel --emptyOutDir ./sidepanel && shx cp ./background.js ./dist && shx cp ./manifest.json ./dist && shx cp ./content.js ./dist",
+    "postbuild:sidepanel": "shx rm -rf ./sidepanel/src/utils && shx cp -R ./sidepanel/src/dev-utils ./sidepanel/src/utils && shx rm -rf ./sidepanel/src/dev-utils"
+  },
+  "dependencies": {
+    "lucide-react": "^0.468.0",
+    "prop-types": "^15.8.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.15.0",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "eslint": "^9.15.0",
+    "eslint-plugin-react": "^7.37.2",
+    "eslint-plugin-react-hooks": "^5.0.0",
+    "eslint-plugin-react-refresh": "^0.4.14",
+    "globals": "^15.12.0",
+    "shx": "^0.3.4",
+    "vite": "^6.0.1"
+  }
+}

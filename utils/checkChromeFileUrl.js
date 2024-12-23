@@ -4,7 +4,7 @@
  * @returns {boolean} true if the file exists, false otherwise
  */
 export default function checkChromeFileUrl(path) {
-    if (chrome.runtime.getURL(path) != null) {
+    if (chrome.runtime.getURL(`sidepanel/${path}`) != null) {
         return true;
     }
     else {

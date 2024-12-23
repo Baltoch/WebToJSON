@@ -222,12 +222,12 @@ export function getParams(response) {
  * @returns {Object} json
  */
 export function addJSONProperty(json, property, value) {
-    console.log(value);
     if (json[property]) {
         json[property].push(value);
     } else {
         json[property] = [value];
     }
+    //console.log(json);
     return json;
 }
 

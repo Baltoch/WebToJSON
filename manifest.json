@@ -5,7 +5,12 @@
     "permissions": [
         "activeTab",
         "scripting",
-        "sidePanel"
+        "sidePanel",
+        "aiLanguageModelOriginTrial"
+    ],
+    "key": "hbhldheioiememjkhkhmfoaaalgpajoj",
+    "trial_tokens": [
+        "AqDhtKTxt8MadbwGIMt0gJlfxztvbkNDjHZHWioD1iYd7FUXrp1s/RHtNVShH9sGLn3r+gvOfF27au1FqShLtAIAAAB4eyJvcmlnaW4iOiJjaHJvbWUtZXh0ZW5zaW9uOi8vaG1rZm5ram9namxkY2RsYm9iYmdvZmxtZGhhZWlwZ2oiLCJmZWF0dXJlIjoiQUlQcm9tcHRBUElGb3JFeHRlbnNpb24iLCJleHBpcnkiOjE3NjA0ODYzOTl9"
     ],
     "background": {
         "service_worker": "background.js"

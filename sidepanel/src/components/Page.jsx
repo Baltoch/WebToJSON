@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from 'react';
 import {SendHorizontal} from 'lucide-react';
 import BubbleSection from './BubbleSection';
@@ -17,7 +16,11 @@ export default function Page() {
     useEffect(() => {
         async function initAgent() {
             console.log("Initializing agent");
-            console.log(await agent.current.init());
+            agent.current.init();
+            while (agent.current.status != "Agent ready") {
+                console.log(agent.current.status)
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
             console.log("Agent initialized");
         }
         initAgent();
@@ -26,8 +29,6 @@ export default function Page() {
     async function addBubble(e) { 
         e.preventDefault();
         const data = new FormData(e.target)
-        console.log(agent.current.status);
-        console.log(session);
         await agent.current.call(data.get("prompt"));
         labelRef.current.remove();
         promptSectionRef.current.className = 'prompt-section-down';

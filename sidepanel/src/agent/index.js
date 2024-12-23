@@ -86,8 +86,10 @@ export default class BuiltInAIAgent {
         }
 
         // Loading the prompt and example files
-        this.system = await loadChromeFile('agent/prompt.xml');
-        this.example = await loadChromeFile('agent/example.xml');
+        this.system = await loadChromeFile('./prompt.xml');
+        this.example = await loadChromeFile('./example.xml');
+
+        console.log(this.#prompt());
 
         this.chatModel = new BuiltInAI();
         await this.chatModel.init();
@@ -110,7 +112,7 @@ export default class BuiltInAIAgent {
 
     async call(message) {
         if (!this.ready) {
-            throw new Error("Agent not ready");
+            throw new Error(`Agent not ready, current status: ${this.status}`);
         }
         // Add user message to history
         this.pushSession(new HumanMessage(message));
@@ -173,6 +175,7 @@ export default class BuiltInAIAgent {
             response = await this.chatModel.invoke(this.#prompt());
             this.pushSession(new AIMessage(response));
         }
+        console.log(response);
         return response;
     }
 
