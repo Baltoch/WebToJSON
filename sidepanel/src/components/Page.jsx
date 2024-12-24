@@ -56,7 +56,7 @@ export default function Page() {
                     </button>
                 </form>
             </section>
-            <footer>Developped with ♥ by Balthazar and Paul</footer>
+            <footer>Developped with ♥ by <a href='https://github.com/Baltoch' target='_blank'>Balthazar</a> and <a href='https://github.com/PaulGOMA' target='_blank'>Paul</a></footer>
         </>
     )
 }
