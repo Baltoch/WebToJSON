@@ -4,14 +4,15 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --config ./sidepanel/vite.config.js",
-    "build": "vite build",
+    "dev": "npm run dev:all",
+    "build": "npm run build:all",
     "lint": "eslint .",
-    "preview": "vite preview",
     "dev:sidepanel": "vite --config ./sidepanel/vite.config.js ./sidepanel",
     "prebuild:sidepanel": "shx cp -R ./sidepanel/src/utils ./sidepanel/src/dev-utils && shx cp -R ./utils ./sidepanel/src",
-    "build:sidepanel": "vite build --config ./sidepanel/vite.config.js --outDir ../dist/sidepanel --emptyOutDir ./sidepanel && shx cp ./background.js ./dist && shx cp ./manifest.json ./dist && shx cp ./content.js ./dist",
-    "postbuild:sidepanel": "shx rm -rf ./sidepanel/src/utils && shx cp -R ./sidepanel/src/dev-utils ./sidepanel/src/utils && shx rm -rf ./sidepanel/src/dev-utils"
+    "build:sidepanel": "vite build --config ./sidepanel/vite.config.js --outDir ../dist/sidepanel --emptyOutDir ./sidepanel",
+    "postbuild:sidepanel": "shx rm -rf ./sidepanel/src/utils && shx cp -R ./sidepanel/src/dev-utils ./sidepanel/src/utils && shx rm -rf ./sidepanel/src/dev-utils",
+    "build:agent": "shx cp ./background.js ./dist && shx cp ./manifest.json ./dist && shx cp ./content.js ./dist &&  shx cp -R ./utils ./dist &&  shx cp -R ./agent ./dist",
+    "build:all": "npm run build:agent && npm run build:sidepanel"
   },
   "dependencies": {
     "lucide-react": "^0.468.0",

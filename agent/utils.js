@@ -1,4 +1,3 @@
-import builtInAICreateSession from "../utils/builtInAICreateSession";
 import builtInAISummarize from '../utils/builtInAISummarize.js';
 import builtInAITranslate from '../utils/builtInAITranslate.js';
 import sendChromeMessage from '../utils/sendChromeMessage.js';
@@ -72,7 +71,7 @@ export class BuiltInAI {
     }
 
     async init() {
-        this.session = await builtInAICreateSession({});
+        this.session = await chrome.aiOriginTrial.languageModel.create({});
     }
 
     async invoke(text) {
@@ -94,15 +93,17 @@ export class WebAgent {
      * Creates a new WebAgent instance
      * @param {string} system The system prompt for the agent
      * @param {string} example The example prompt session for the agent
-     * @param {ChatOpenAI | BuiltInAI} model The model to use for the agent
+     * @param {BuiltInAI} model The model to use for the agent
      * @param {Object} webpage The webpage to analyze
      */
-    constructor(system, example, model, webpage) {
+    constructor(system, example, model) {
         this.json = {};
         this.memory = {};
         this.system = system;
         this.example = example;
-        this.session = [new WebpageMessage(webpage)]; // Message history
+        this.status = "Not Initiated";
+        this.ready = false;
+        this.session = []; // Message history
 
         // Initialize the chat model
         this.chatModel = model;
@@ -115,8 +116,8 @@ export class WebAgent {
         // Execute the model and get the result
         const result = await this.#execute();
 
-        // Add assistant's response to history
-        this.session.push(new AIMessage(result));
+        // Send assistant's response to the front-end
+        sendChromeMessage(result, "assistant");
 
         return result;
     }
@@ -127,7 +128,7 @@ export class WebAgent {
      */
     #setJSON(json) {
         this.json = json;
-        sendChromeMessage(this.json, "JSON")
+        sendChromeMessage(this.json, "json")
     }
 
     async #execute() {
@@ -253,3 +254,44 @@ export function removeJSONProperty(json, property) {
     json.drop(property);
     return json;
 }
+
+// /**
+//  * Use Chrome Built-in AI translator to translate a text
+//  * @param {string} text text to translate
+//  * @param {string} language language to translate to
+//  * @returns {string} translation
+//  */
+// export default async function builtInAITranslate(text, language) {
+//     // Detecting the source language
+//     detector = await self.translation.createDetector();
+//     const sourceLanguage = await detector.detect(someUserText);
+
+//     // Translating the text
+//     const translator = await self.translation.createTranslator({
+//         sourceLanguage: sourceLanguage,
+//         targetLanguage: language,
+//     });
+//     const translation = await translator.translate(text);
+//     return translation;
+// }
+
+// /**
+//  * Use the Chrome Built-in AI summarizer to summarize a text
+//  * @param {string} text Text to summarize
+//  * @param {string | null} context Additional context to provide to the summarizer
+//  * @returns {string} summary
+//  */
+// export default async function builtInAISummarize(text, context) {
+//     // Built-in AI summarizer
+//     const summarizer = await self.ai.summarizer.create({
+//         monitor(m) {
+//             m.addEventListener('downloadprogress', (e) => {
+//                 console.log(`Downloaded ${e.loaded} of ${e.total} bytes.`);
+//             });
+//         }
+//     });
+//     const summary = await summarizer.summarize(text, {
+//         context: context,
+//     });
+//     return summary;
+// }

@@ -3,10 +3,12 @@ import PropTypes from 'prop-types';
 export default function BubbleSection({list}) {
     
     const bubbles = list.map((bubble, index) => {
-        if(bubble.getType() === "user" || bubble.getType() === "assistant") {
-            return (<article key={index} className={`bubble-${bubble.getType()}`}>
-                {bubble.toString()}
-            </article>)
+        if(bubble.type === "user" || bubble.type === "assistant") {
+            return (
+                <article key={index} className={`bubble-${bubble.type}`}>
+                    {bubble.content}
+                </article>
+            )
         }
     })
 

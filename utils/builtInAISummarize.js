@@ -4,7 +4,7 @@
  * @param {string | null} context Additional context to provide to the summarizer
  * @returns {string} summary
  */
-export default async function summarize(text, context) {
+export default async function builtInAISummarize(text, context) {
     // Built-in AI summarizer
     const summarizer = await self.ai.summarizer.create({
         monitor(m) {

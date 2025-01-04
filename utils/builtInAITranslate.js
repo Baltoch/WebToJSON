@@ -4,7 +4,7 @@
  * @param {string} language language to translate to
  * @returns {string} translation
  */
-export default async function translate(text, language) {
+export default async function builtInAITranslate(text, language) {
     // Detecting the source language
     detector = await self.translation.createDetector();
     const sourceLanguage = await detector.detect(someUserText);
